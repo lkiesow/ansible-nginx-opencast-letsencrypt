@@ -119,7 +119,7 @@
       become: yes
       become_user: nginx
       get_url:
-        url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+        url=https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
         dest=/etc/nginx/acme/lets-encrypt-x3-cross-signed.pem
         mode=0700
 
