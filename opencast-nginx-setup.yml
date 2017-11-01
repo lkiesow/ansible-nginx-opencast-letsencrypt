@@ -98,88 +98,20 @@
       when: nginx_restart|changed
 
 # acme configuration
-
-    - name: create acme folder
-      become: yes
-      file:
-        path=/etc/nginx/acme
-        state=directory
-        owner=nginx
-        group=nginx
-        mode=0744
-
-    - name: download acme-tiny
-      become: yes
-      become_user: nginx
-      get_url:
-        url=https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py
-        dest=/etc/nginx/acme/acme-tiny
-
-    - name: download let's encrypt intermediate certificate
-      become: yes
-      become_user: nginx
-      get_url:
-        url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
-        dest=/etc/nginx/acme/lets-encrypt-x3-cross-signed.pem
-        mode=0700
-
-    - name: generate let's encrypt key
-      become: yes
-      become_user: nginx
-      shell: openssl genrsa 4096 > account.key
-      args:
-        chdir: /etc/nginx/acme/
-        creates: account.key
-
-    - name: generate private key
-      become: yes
-      become_user: nginx
-      shell: openssl genrsa 4096 > {{ inventory_hostname }}.key
-      args:
-        chdir: /etc/nginx/ssl/
-        creates: "{{ inventory_hostname }}.key"
-
-    - name: generate certificate request
-      become: yes
-      become_user: nginx
-      shell: >
-        openssl req -new -sha256
-        -key /etc/nginx/ssl/{{ inventory_hostname }}.key
-        -subj "/CN={{ inventory_hostname }}" >
-        {{ inventory_hostname }}.csr
-      args:
-        chdir: /etc/nginx/acme/
-        creates: "{{ inventory_hostname }}.csr"
-
-    - name: create acme challenge folder
-      become: yes
-      file:
-        path=/srv/www/acme-challenges/
-        state=directory
-        owner=nginx
-        group=nginx
-        mode=0755
-
-    - name: request certificate
-      become: yes
-      become_user: nginx
-      shell: >
-        /etc/nginx/acme/acme-tiny
-        --account-key /etc/nginx/acme/account.key
-        --csr /etc/nginx/acme/{{ inventory_hostname }}.csr
-        --acme-dir /srv/www/acme-challenges/
-        > /etc/nginx/ssl/{{ inventory_hostname }}.crt
-      args:
-        chdir: /etc/nginx/acme/
-        creates: /etc/nginx/ssl/{{ inventory_hostname }}.crt
-      notify:
-        - reload nginx
+# look at stable.opencast.org (NOT develop...)
+# - install acme-tiny
+# - generate certificate request
+# - enable systemd.service/timer
+# - manually start systemd.service once (request initial certificate) if no
+#   certificate exists
+#
+# Note: Path in nginx conf needs to be adjusted
 
     - name: host https configuration
       become: yes
       template:
-        src=host.ssl.conf
-        dest=/etc/nginx/conf.d/{{ inventory_hostname }}.https.conf
+        src: host.ssl.conf
+        dest: /etc/nginx/conf.d/{{ inventory_hostname }}.https.conf
       notify:
         - reload nginx
 
@@ -187,5 +119,5 @@
     - name: reload nginx
       become: yes
       service:
-        name=nginx
-        state=restarted
+        name: nginx
+        state: restarted
